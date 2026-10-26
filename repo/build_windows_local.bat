@@ -1,0 +1,22 @@
+@echo off
+rem Reserva: compila o motor nativo NO SEU PC (se preferir não usar o GitHub).
+rem Precisa de: Visual Studio Build Tools (carga "Desenvolvimento para desktop com C++"), CMake e Git.
+rem Uso (na pasta onde estão a pasta "native" e este arquivo):
+rem     build_windows_local.bat  D:\LagoTracks\.venv\Scripts\python.exe
+setlocal
+set "PY=%~1"
+if "%PY%"=="" set "PY=python"
+for /f "delims=" %%i in ('"%PY%" -c "import sys;print(sys.prefix)"') do set "PYROOT=%%i"
+echo Python: %PYROOT%
+"%PY%" -m pip install numpy scipy
+cmake -S native -B build -A x64 -DCMAKE_BUILD_TYPE=Release -DPython_ROOT_DIR="%PYROOT%" -DPython_FIND_STRATEGY=LOCATION || goto :erro
+cmake --build build --config Release --parallel || goto :erro
+if not exist nativo_bin mkdir nativo_bin
+copy /y build\Release\_native*.pyd nativo_bin\ || goto :erro
+echo.
+echo Pronto: o modulo esta em nativo_bin\  (agora rode aplicar_nativo.py)
+exit /b 0
+:erro
+echo.
+echo FALHOU. Copie a mensagem de erro acima e me mande.
+exit /b 1
